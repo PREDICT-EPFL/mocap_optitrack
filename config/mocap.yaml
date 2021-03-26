@@ -1,6 +1,6 @@
 #
 # Definition of all trackable objects
-# Identifier corresponds to Trackable ID set in Tracking Tools
+# Identifier corresponds to Streaming ID set in Motive
 #
 rigid_bodies:
     '3':

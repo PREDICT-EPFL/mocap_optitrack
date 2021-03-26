@@ -81,7 +81,7 @@ mocap_optitrack::PointArrayStamped getRosFreeMarkers(
 FreeMarkerPublisher::FreeMarkerPublisher(ros::NodeHandle &nh,
                                        Version const& natNetVersion)
 {
-  publisher = nh.advertise<mocap_optitrack::PointArrayStamped>("mocap_node/free_markers", 1000);
+  publisher = nh.advertise<mocap_optitrack::PointArrayStamped>("free_markers", 1000);
 
   // Motive 1.7+ uses a new coordinate system
   // natNetVersion = (natNetVersion >= Version("1.7"));
