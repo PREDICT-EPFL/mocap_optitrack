@@ -1,6 +1,7 @@
 /*
- * Copyright (c) 2011 University of Bonn, Computer Science Institute,
- * Kathrin Gräve
+ * Copyright (c) 2021, Joseph Lorenzetti
+ * Copyright (c) 2018, Houston Mechatronics Inc., JD Yamokoski
+ * Copyright (c) 2012, Clearpath Robotics, Inc., Alex Bencz
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,80 +28,36 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
-#include "mocap_optitrack/data_model.h"
+#ifndef __MOCAP_OPTITRACK_FREE_MARKER_PUBLISHER_H__
+#define __MOCAP_OPTITRACK_FREE_MARKER_PUBLISHER_H__
+
+#include <map>
+#include <memory>
+
+#include <ros/ros.h>
+
+#include <mocap_optitrack/version.h>
+#include <mocap_optitrack/data_model.h>
+#include <mocap_optitrack/mocap_config.h>
 
 namespace mocap_optitrack
 {
 
-RigidBody::RigidBody() :
-  isTrackingValid(false)
+/// \brief Encapsulation of a FreeMarker data publisher.
+class FreeMarkerPublisher
 {
-}
+public:
+  FreeMarkerPublisher(ros::NodeHandle &nh,
+                     Version const& natNetVersion);
+  ~FreeMarkerPublisher();
+  void publish(ros::Time const& time, std::vector<LabeledMarker> const&);
 
+private:
+  Version coordinatesVersion;
 
-bool RigidBody::hasValidData() const
-{
-  return isTrackingValid;
-}
+  ros::Publisher publisher;
+};
 
+} // namespace
 
-void ModelDescription::clear()
-{
-  markerNames.clear();
-}
-
-void MarkerSet::clear()
-{
-  markers.clear();
-}
-
-
-ModelFrame::ModelFrame() :
-  latency(0.0)
-{
-}
-
-void ModelFrame::clear()
-{
-  markerSets.clear();
-  otherMarkers.clear();
-  rigidBodies.clear();
-  labeledMarkers.clear();
-}
-
-
-ServerInfo::ServerInfo() :
-  natNetVersion(0, 0, 0, 0),
-  serverVersion(0, 0, 0, 0)
-{
-}
-
-
-DataModel::DataModel() :
-  hasValidServerInfo(false)
-{
-}
-
-void DataModel::clear()
-{
-  dataFrame.clear();
-}
-
-void DataModel::setVersions(int* nver, int* sver)
-{
-  serverInfo.natNetVersion.setVersion(nver[0], nver[1], nver[2], nver[3]);
-  serverInfo.serverVersion.setVersion(sver[0], sver[1], sver[2], sver[3]);
-  hasValidServerInfo = true;
-}
-
-Version const& DataModel::getNatNetVersion() const
-{
-  return serverInfo.natNetVersion;
-}
-
-Version const& DataModel::getServerVersion() const
-{
-  return serverInfo.serverVersion;
-}
-
-}  // namespace mocap_optitrack
+#endif

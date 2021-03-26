@@ -12,9 +12,11 @@
     and/or 2D poses.
     </p>
     <p>
-    Currently, this node supports the NatNet streaming protocol v3.0
+    Currently, this node supports the NatNet streaming protocol v3.0 and has been
+    modified to include streaming of free markers.
     </p>
     <p>
+    Copyright (c) 2021, Joseph Lorenzetti<br/>
     Copyright (c) 2013, Clearpath Robotics<br/> 
     Copyright (c) 2010, University of Bonn, Computer Science Institute VI<br/>
     All rights reserved.
@@ -25,12 +27,16 @@
   <author email="abencz@clearpathrobotics.com">Alex Bencz/</author>
   <author email="tony@baltovski.ca">Tony Baltovski</author>
   <author email="jyamokoski@houstonmechatronics.com">JD Yamokoski</author>
+  <author email="jlorenze@stanford.edu">Joseph Lorenzetti</author>
   <license>BSD</license>
 
   <url type="website">http://ros.org/wiki/mocap_optitrack</url>
-  <url type="repository">https://github.com/ros-drivers/mocap_optitrack</url>
+  <url type="repository">https://github.com/StanfordASL/mocap_optitrack</url>
 
   <buildtool_depend>catkin</buildtool_depend>
+
+  <build_depend>message_generation</build_depend>
+  <exec_depend>message_runtime</exec_depend>
 
   <depend>dynamic_reconfigure</depend>
   <depend>geometry_msgs</depend>

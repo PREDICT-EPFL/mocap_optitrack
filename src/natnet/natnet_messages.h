@@ -61,6 +61,13 @@ namespace natnet
                 mocap_optitrack::Version const&);
         };
 
+        struct LabeledMarkerMessagePart
+        {
+            void deserialize(MessageBuffer::const_iterator&, 
+                mocap_optitrack::LabeledMarker&,
+                mocap_optitrack::Version const&);
+        };
+
     public:
         virtual void deserialize(MessageBuffer const&, mocap_optitrack::DataModel*);
     };

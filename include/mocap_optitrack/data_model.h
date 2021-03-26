@@ -76,6 +76,22 @@ struct RigidBody
   bool hasValidData() const;
 };
 
+/// \brief Data object for storing labeled marker information
+struct LabeledMarker
+{
+  int markerId;
+  int modelId;
+  Marker marker;
+  float size;
+  bool bOccluded; // occluded marker
+  bool bPCSolved; // point cloud solved
+  bool bModelSolved; // model solved
+  bool bHasModel;
+  bool bUnlabeled;
+  bool bActiveMarker;
+  float residual;
+};
+
 /// \brief Data object describing a single tracked model
 struct ModelDescription
 {
@@ -103,6 +119,7 @@ struct ModelFrame
   std::vector<MarkerSet> markerSets;
   std::vector<Marker> otherMarkers;
   std::vector<RigidBody> rigidBodies;
+  std::vector<LabeledMarker> labeledMarkers;
 
   float latency;
 };

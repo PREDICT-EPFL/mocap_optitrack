@@ -33,6 +33,7 @@
 #include <mocap_optitrack/data_model.h>
 #include <mocap_optitrack/mocap_config.h>
 #include <mocap_optitrack/rigid_body_publisher.h>
+#include <mocap_optitrack/free_marker_publisher.h>
 #include <mocap_optitrack/MocapOptitrackConfig.h>
 #include "natnet/natnet_messages.h"
 
@@ -95,11 +96,26 @@ public:
         if (updateDataModelFromServer()) usleep(10);
         ros::spinOnce();
       }
-      // Once we have the server info, create publishers
+      // Once we have the server info, create rigid body publishers
       publishDispatcherPtr.reset(
         new RigidBodyPublishDispatcher(nh,
                                        dataModel.getNatNetVersion(),
                                        publisherConfigurations));
+
+      // Create a separate publisher for free markers
+      if (nh.hasParam("free_markers"))
+      {
+        bool publishFreeMarkers;
+        nh.getParam("free_markers", publishFreeMarkers);
+        if (publishFreeMarkers) 
+        {
+          ROS_INFO("Publishing free markers");
+          freeMarkerPublisherPtr.reset(
+            new FreeMarkerPublisher(nh, dataModel.getNatNetVersion()));
+        }
+      }
+
+
       ROS_INFO("Initialization complete");
       initialized = true;
     }
@@ -122,6 +138,9 @@ public:
           // rigid bodies in the data model
           ros::Time time = ros::Time::now();
           publishDispatcherPtr->publish(time, dataModel.dataFrame.rigidBodies);
+
+          // Additionally publish the free markers
+          freeMarkerPublisherPtr->publish(time, dataModel.dataFrame.labeledMarkers);
 
           // Clear out the model to prepare for the next frame of data
           dataModel.clear();
@@ -164,6 +183,7 @@ private:
   DataModel dataModel;
   std::unique_ptr<UdpMulticastSocket> multicastClientSocketPtr;
   std::unique_ptr<RigidBodyPublishDispatcher> publishDispatcherPtr;
+  std::unique_ptr<FreeMarkerPublisher> freeMarkerPublisherPtr;
   dynamic_reconfigure::Server<MocapOptitrackConfig> server;
   bool initialized;
 };
