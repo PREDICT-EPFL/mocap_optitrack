@@ -510,10 +510,10 @@ void MessageDispatcher::dispatch(
       DataFrameMessage msg;
       msg.deserialize(msgBuffer, dataModel);
     }
-    else
-    {
-      ROS_WARN("Client has not received server info request. Parsing data message aborted.");
-    }
+    // else
+    // {
+    //   ROS_WARN("Client has not received server info request. Parsing data message aborted.");
+    // }
     return;
   }
 
