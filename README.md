@@ -19,7 +19,7 @@ Enable `Broadcast Frame Data`
 
 Under `View -> Data Streaming Pane` make sure `Local Interface` is set to the IP address of the computer running Motive:Tracker corresponding to the network that is used to share the data stream.
 
-Enable `Rigid Bodies`, `Labeled Markers`, `Unlabeled Markers`, and `Asset Markers`
+Enable `Rigid Bodies` and `Unlabeled Markers`
 
 Set `Transmission Type` to `Multicast`
 
