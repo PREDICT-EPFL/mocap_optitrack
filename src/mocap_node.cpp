@@ -128,19 +128,25 @@ public:
 
   void run()
   {
+    int oldFrameNumber = dataModel.frameNumber - 1;
     while (ros::ok())
     {
       if (initialized)
       {
         if (updateDataModelFromServer())
         {
-          // Maybe we got some data? If we did it would be in the form of one or more
-          // rigid bodies in the data model
-          ros::Time time = ros::Time::now();
-          publishDispatcherPtr->publish(time, dataModel.dataFrame.rigidBodies);
+          if (dataModel.frameNumber > oldFrameNumber) {
+            ros::Time time = ros::Time::now();
 
-          // Additionally publish the free markers
-          freeMarkerPublisherPtr->publish(time, dataModel.dataFrame.labeledMarkers);
+            // Maybe we got some data? If we did it would be in the form of one or more
+            // rigid bodies in the data model
+            publishDispatcherPtr->publish(time, dataModel.dataFrame.rigidBodies);
+
+            // Additionally publish the free markers
+            freeMarkerPublisherPtr->publish(time, dataModel.dataFrame.labeledMarkers);
+
+            oldFrameNumber = dataModel.frameNumber;
+          }
 
           // Clear out the model to prepare for the next frame of data
           dataModel.clear();
