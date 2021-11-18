@@ -1,63 +1,59 @@
-cmake_minimum_required(VERSION 3.0.2)
+cmake_minimum_required(VERSION 3.5)
 project(mocap_optitrack)
 
-# Require c++11
-include(CheckCXXCompilerFlag)
-CHECK_CXX_COMPILER_FLAG("-std=c++11" COMPILER_SUPPORTS_CXX11)
-if(COMPILER_SUPPORTS_CXX11)
-    set(CMAKE_CXX_FLAGS "-std=c++11")
-else()
-    message(FATAL_ERROR "The compiler ${CMAKE_CXX_COMPILER} has no C++11 support. Please use a different C++ compiler.")
+# Default to c++14
+if(NOT CMAKE_CXX_STANDARD)
+	set(CMAKE_CXX_STANDARD 14)
 endif()
 
-find_package(catkin REQUIRED COMPONENTS 
-  roscpp
-  geometry_msgs
-  nav_msgs
-  dynamic_reconfigure
-  tf
-  message_generation)
+if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+	add_compile_options(-Wall -Wextra)
+endif()
 
-# dynamic reconfigure
-generate_dynamic_reconfigure_options(
-  cfg/MocapOptitrack.cfg
-)
-
-add_message_files(
-  FILES
-  PointArrayStamped.msg
-)
-
-generate_messages(
-  DEPENDENCIES
-  std_msgs
-  geometry_msgs
-)
-
-catkin_package(
-  INCLUDE_DIRS include
-  CATKIN_DEPENDS roscpp message_runtime
-  dynamic_reconfigure
-)
+find_package(ament_cmake REQUIRED)
+find_package(rclcpp REQUIRED)
+find_package(tf2_ros REQUIRED)
+find_package(geometry_msgs REQUIRED)
+find_package(nav_msgs REQUIRED)
+find_package(dynamic_reconfigure REQUIRED)
+find_package(message_generation REQUIRED)
 
 include_directories(include
-  ${catkin_INCLUDE_DIRS}
+	${rclcpp_INCLUDE_DIRS}
+	${tf2_ros_INCLUDE_DIRS}
+	${geometry_msgs_INCLUDE_DIRS}
+	${nav_msgs_INCLUDE_DIRS}
+	${dynamic_reconfigure_INCLUDE_DIRS}
+	${message_generation_INCLUDE_DIRS}
 )
 
 add_subdirectory(src)
 
-install(DIRECTORY launch config
-  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
+rosidl_generate_interfaces(${PROJECT_NAME}
+	PointArrayStamped.msg
+	DEPENDENCIES std_msgs geometry_msgs
+)
 
-if (CATKIN_ENABLE_TESTING)
-  find_package(roslaunch REQUIRED)
-  roslaunch_add_file_check(launch/mocap.launch)
+ament_export_dependencies(message_runtime dynamic_reconfigure)
+ament_export_include_directories(include)
 
-  find_package(roslint REQUIRED)
-  file(GLOB LINT_SRCS
-    src/*.cpp
-    include/*.h)
-  set(ROSLINT_CPP_OPTS "--filter=-runtime/string,-readability/casting,-runtime/references")
-  roslint_cpp(${LINT_SRCS})
-  roslint_add_test()
-endif()
+install(DIRECTORY
+	launch config
+	DESTINATION share/${PROJECT_NAME}/
+)
+ament_package()
+
+
+
+#if (CATKIN_ENABLE_TESTING)
+#	find_package(roslaunch REQUIRED)
+#	roslaunch_add_file_check(launch/mocap.launch)
+#
+#	find_package(roslint REQUIRED)
+#	file(GLOB LINT_SRCS
+#			src/*.cpp
+#			include/*.h)
+#	set(ROSLINT_CPP_OPTS "--filter=-runtime/string,-readability/casting,-runtime/references")
+#	roslint_cpp(${LINT_SRCS})
+#	roslint_add_test()
+#endif()

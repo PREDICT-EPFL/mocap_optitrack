@@ -6,7 +6,10 @@
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
  *
- * 1. Redistributions of source code must retain the above copyright notice,
+ * 1. RediCPP_DEBUG(node->get_logger(), "%4i bytes received from %s:%i", status, inet_ntoa( remote_addr.sin_addr ), ntohs( remote_addr.sin_port ) );
+  }
+  else if( status == 0 ) {
+    RCLCPP_DEBUG(node->get_logger(), stributions of source code must retain the above copyright notice,
  *    this list of conditions and the following disclaimer.
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
@@ -38,6 +41,7 @@
 #include <string>
 #include <arpa/inet.h>
 #include <stdexcept>
+#include <rclcpp/node.hpp>
 
 /// \brief Exception class thrown by socket classes in this file.
 class SocketException : public std::runtime_error
@@ -60,7 +64,7 @@ public:
   static const int MAXRECV = 3000;
 
   /// Creates a socket and joins the multicast group with the given address
-  UdpMulticastSocket(const int local_port, const std::string multicast_ip = "224.0.0.1");
+  UdpMulticastSocket(rclcpp::Node::SharedPtr &node,const int local_port, const std::string multicast_ip = "224.0.0.1");
 
   ///
   ~UdpMulticastSocket();
@@ -88,6 +92,7 @@ private:
   sockaddr_in HostAddr;
   bool remote_ip_exist;
   char buf [ MAXRECV + 1 ];
+    rclcpp::Node::SharedPtr node;
 };
 
 #endif /*__MOCAP_OPTITRACK_SOCKET_H__*/

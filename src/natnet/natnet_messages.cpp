@@ -31,8 +31,7 @@
 #include <cstring>
 #include <cinttypes>
 
-#include <ros/console.h>
-
+#include <rclcpp/logging.hpp>
 #include "natnet_packet_definition.h"
 
 namespace natnet
@@ -133,7 +132,8 @@ void ServerInfoMessage::deserialize(
 
 
 void DataFrameMessage::RigidBodyMessagePart::deserialize(
-  MessageBuffer::const_iterator& msgBufferIter, 
+  rclcpp::Logger logger,
+  MessageBuffer::const_iterator& msgBufferIter,
   mocap_optitrack::RigidBody& rigidBody,
   mocap_optitrack::Version const& natNetVersion)
 {
@@ -141,8 +141,8 @@ void DataFrameMessage::RigidBodyMessagePart::deserialize(
   utilities::read_and_seek(msgBufferIter, rigidBody.bodyId);
   utilities::read_and_seek(msgBufferIter, rigidBody.pose);
 
-  ROS_DEBUG("  Rigid body ID: %d", rigidBody.bodyId);
-  ROS_DEBUG("    Pos: [%3.2f,%3.2f,%3.2f], Ori: [%3.2f,%3.2f,%3.2f,%3.2f]",
+  RCLCPP_DEBUG(logger, "  Rigid body ID: %d", rigidBody.bodyId);
+  RCLCPP_DEBUG(logger, "    Pos: [%3.2f,%3.2f,%3.2f], Ori: [%3.2f,%3.2f,%3.2f,%3.2f]",
            rigidBody.pose.position.x,
            rigidBody.pose.position.y,
            rigidBody.pose.position.z,
@@ -156,7 +156,7 @@ void DataFrameMessage::RigidBodyMessagePart::deserialize(
   {
     // Mean marker error
     utilities::read_and_seek(msgBufferIter, rigidBody.meanMarkerError);
-    ROS_DEBUG("    Mean marker error: %3.2f", rigidBody.meanMarkerError);
+    RCLCPP_DEBUG(logger, "    Mean marker error: %3.2f", rigidBody.meanMarkerError);
   }
 
   // NatNet version 2.6 and later
@@ -166,66 +166,70 @@ void DataFrameMessage::RigidBodyMessagePart::deserialize(
     short params = 0; 
     utilities::read_and_seek(msgBufferIter, params);
     rigidBody.isTrackingValid = params & 0x01; // 0x01 : rigid body was successfully tracked in this frame
-    ROS_DEBUG("    Successfully tracked in this frame: %s", 
+    RCLCPP_DEBUG(logger, "    Successfully tracked in this frame: %s",
       (rigidBody.isTrackingValid ? "YES" : "NO"));
   }
 }
 
 void DataFrameMessage::LabeledMarkerMessagePart::deserialize(
-  MessageBuffer::const_iterator& msgBufferIter, 
+  rclcpp::Logger logger,
+  MessageBuffer::const_iterator& msgBufferIter,
   mocap_optitrack::LabeledMarker& labeledMarker,
   mocap_optitrack::Version const& natNetVersion)
 {
-  int id = 0; 
+
+
+  int id = 0;
   utilities::read_and_seek(msgBufferIter, id);
   utilities::decode_marker_id(id, labeledMarker.modelId, labeledMarker.markerId);
 
   // Get marker position
   utilities::read_and_seek(msgBufferIter, labeledMarker.marker);
-  
+
   // Get marker size
   utilities::read_and_seek(msgBufferIter, labeledMarker.size);
 
-  if (natNetVersion >= mocap_optitrack::Version("2.6"))
+  if (NatNetVersion >= mocap_optitrack::Version("2.6"))
   {
     // marker params
     short params = 0;
     utilities::read_and_seek(msgBufferIter, params);
     // marker was not visible (occluded) in this frame
     labeledMarker.bOccluded = (params & 0x01) != 0;
-    // position provided by point cloud solve     
+    // position provided by point cloud solve
     labeledMarker.bPCSolved = (params & 0x02) != 0;
     // position provided by model solve
-    labeledMarker.bModelSolved = (params & 0x04) != 0;  
+    labeledMarker.bModelSolved = (params & 0x04) != 0;
     if (natNetVersion >= mocap_optitrack::Version("3.0"))
     {
       // marker has an associated model
       labeledMarker.bHasModel = (params & 0x08) != 0;
       // marker is an unlabeled marker
-      labeledMarker.bUnlabeled = (params & 0x10) != 0;   
-      // marker is an active marker 
+      labeledMarker.bUnlabeled = (params & 0x10) != 0;
+      // marker is an active marker
       labeledMarker.bActiveMarker = (params & 0x20) != 0;
     }
   }
 
-  ROS_DEBUG("  MarkerID: %d, ModelID: %d", labeledMarker.markerId, labeledMarker.modelId);
-  ROS_DEBUG("    Pos: [%3.2f,%3.2f,%3.2f]", 
+  RCLCPP_DEBUG(logger, "  MarkerID: %d, ModelID: %d", labeledMarker.markerId, labeledMarker.modelId);
+  RCLCPP_DEBUG(logger, "    Pos: [%3.2f,%3.2f,%3.2f]",
     labeledMarker.marker.x, labeledMarker.marker.y, labeledMarker.marker.z);
-  ROS_DEBUG("    Size: %3.2f", labeledMarker.size);
-  ROS_DEBUG("    Label: %d", labeledMarker.bUnlabeled);
+  RCLCPP_DEBUG(logger, "    Size: %3.2f", labeledMarker.size);
+  RCLCPP_DEBUG(logger, "    Label: %d", labeledMarker.bUnlabeled);
 
   // NatNet version 3.0 and later
   if (natNetVersion >= mocap_optitrack::Version("3.0"))
   {
     // Marker residual
     utilities::read_and_seek(msgBufferIter, labeledMarker.residual);
-    ROS_DEBUG("    Residual:  %3.2f", labeledMarker.residual);
+    RCLCPP_DEBUG(logger, "    Residual:  %3.2f", labeledMarker.residual);
   }
 }
 
 
 void DataFrameMessage::deserialize(
-  MessageBuffer const& msgBuffer, 
+  rclcpp::Logger logger,
+  MessageBuffer const& msgBuffer,
   mocap_optitrack::DataModel* dataModel)
 {
   // Get iterator to beginning of buffer and skip the header
@@ -234,8 +238,8 @@ void DataFrameMessage::deserialize(
 
   // Next 4 bytes is the frame number
   utilities::read_and_seek(msgBufferIter, dataModel->frameNumber);
-  ROS_DEBUG("=== BEGIN DATA FRAME ===");
-  ROS_DEBUG("Frame number: %d", dataModel->frameNumber);
+  RCLCPP_DEBUG(logger, "=== BEGIN DATA FRAME ===");
+  RCLCPP_DEBUG(logger, "Frame number: %d", dataModel->frameNumber);
 
   // Here on out its conveinent to get a pointer directly
   // to the ModelFrame object as well as the NatNetVersion
@@ -245,8 +249,8 @@ void DataFrameMessage::deserialize(
   // Next 4 bytes is the number of data sets (markersets, rigidbodies, etc)
   int numMarkerSets = 0;
   utilities::read_and_seek(msgBufferIter, numMarkerSets);
-  ROS_DEBUG("*** MARKER SETS ***");
-  ROS_DEBUG("Marker set count: %d", numMarkerSets);
+  RCLCPP_DEBUG(logger, "*** MARKER SETS ***");
+  RCLCPP_DEBUG(logger, "Marker set count: %d", numMarkerSets);
   dataFrame->markerSets.resize(numMarkerSets);
 
   // Loop through number of marker sets and get name and data
@@ -257,30 +261,30 @@ void DataFrameMessage::deserialize(
     // Markerset name
     strcpy(markerSet.name, &(*msgBufferIter));
     utilities::seek(msgBufferIter, strlen(markerSet.name) + 1);
-    ROS_DEBUG("  Marker set %d: %s", icnt++, markerSet.name);
+    RCLCPP_DEBUG(logger, "  Marker set %d: %s", icnt++, markerSet.name);
 
     // Read number of markers that belong to the model
     int numMarkers = 0;
     utilities::read_and_seek(msgBufferIter, numMarkers);
     markerSet.markers.resize(numMarkers);
-    ROS_DEBUG("  Number of markers: %d", numMarkers);
+    RCLCPP_DEBUG(logger, "  Number of markers: %d", numMarkers);
 
     int jcnt = 0;
     for (auto& marker : markerSet.markers)
     {
       // read marker positions
       utilities::read_and_seek(msgBufferIter, marker);
-      ROS_DEBUG("    Marker %d: [x=%3.2f,y=%3.2f,z=%3.2f]", 
+      RCLCPP_DEBUG(logger, "    Marker %d: [x=%3.2f,y=%3.2f,z=%3.2f]",
         jcnt++, marker.x, marker.y, marker.z);
     }
   }
 
   // Loop through unlabeled markers
-  ROS_DEBUG("*** UNLABELED MARKERS (Deprecated) ***");
+  RCLCPP_DEBUG(logger, "*** UNLABELED MARKERS (Deprecated) ***");
   int numUnlabeledMarkers = 0;
   utilities::read_and_seek(msgBufferIter, numUnlabeledMarkers);
   dataFrame->otherMarkers.resize(numUnlabeledMarkers);
-  ROS_DEBUG("Unlabled marker count: %d", numUnlabeledMarkers);
+  RCLCPP_DEBUG(logger, "Unlabled marker count: %d", numUnlabeledMarkers);
 
   // Loop over unlabled markers
   icnt = 0;
@@ -288,23 +292,23 @@ void DataFrameMessage::deserialize(
   {
     // read positions of 'other' markers
     utilities::read_and_seek(msgBufferIter, marker);
-    ROS_DEBUG("  Marker %d: [x=%3.2f,y=%3.2f,z=%3.2f]", 
+    RCLCPP_DEBUG(logger, "  Marker %d: [x=%3.2f,y=%3.2f,z=%3.2f]",
         icnt++, marker.x, marker.y, marker.z);
     // Deprecated
   }
 
   // Loop through rigidbodies
-  ROS_DEBUG("*** RIGID BODIES ***");
+  RCLCPP_DEBUG(logger, "*** RIGID BODIES ***");
   int numRigidBodies = 0;
   utilities::read_and_seek(msgBufferIter, numRigidBodies);
   dataFrame->rigidBodies.resize(numRigidBodies);
-  ROS_DEBUG("Rigid count: %d", numRigidBodies);
+  RCLCPP_DEBUG(logger, "Rigid count: %d", numRigidBodies);
 
   // Loop over rigid bodies
   for (auto& rigidBody : dataFrame->rigidBodies)
   {
     DataFrameMessage::RigidBodyMessagePart rigidBodyMessagePart;
-    rigidBodyMessagePart.deserialize(msgBufferIter, rigidBody, dataModel->getNatNetVersion());
+    rigidBodyMessagePart.deserialize(logger, msgBufferIter, rigidBody, dataModel->getNatNetVersion());
   }
 
   // Skeletons (NatNet version 2.1 and later)
@@ -312,10 +316,10 @@ void DataFrameMessage::deserialize(
   //       is happening.. but need to copy into a model.
   if (NatNetVersion >= mocap_optitrack::Version("2.1"))
   {
-    ROS_DEBUG("*** SKELETONS ***");
+    RCLCPP_DEBUG(logger, "*** SKELETONS ***");
     int numSkeletons = 0;
     utilities::read_and_seek(msgBufferIter, numSkeletons);
-    ROS_DEBUG("Skeleton count: %d", numSkeletons);
+    RCLCPP_DEBUG(logger, "Skeleton count: %d", numSkeletons);
 
     // Loop through skeletons
     for (int j=0; j < numSkeletons; j++)
@@ -323,19 +327,19 @@ void DataFrameMessage::deserialize(
       // skeleton id
       int skeletonId = 0;
       utilities::read_and_seek(msgBufferIter, skeletonId);
-      ROS_DEBUG("Skeleton ID: %d", skeletonId);
+      RCLCPP_DEBUG(logger, "Skeleton ID: %d", skeletonId);
 
       // Number of rigid bodies (bones) in skeleton
       int numRigidBodies = 0;
       utilities::read_and_seek(msgBufferIter, numRigidBodies);
-      ROS_DEBUG("Rigid body count: %d", numRigidBodies);
+      RCLCPP_DEBUG(logger, "Rigid body count: %d", numRigidBodies);
 
       // Loop through rigid bodies (bones) in skeleton
       for (int j=0; j < numRigidBodies; j++)
       {
         mocap_optitrack::RigidBody rigidBody;
         DataFrameMessage::RigidBodyMessagePart rigidBodyMessagePart;
-        rigidBodyMessagePart.deserialize(msgBufferIter, rigidBody, NatNetVersion);
+        rigidBodyMessagePart.deserialize(logger, msgBufferIter, rigidBody, NatNetVersion);
       } // next rigid body
     } // next skeleton
   }
@@ -343,17 +347,17 @@ void DataFrameMessage::deserialize(
   // Labeled markers (NatNet version 2.3 and later)
   if (NatNetVersion >= mocap_optitrack::Version("2.3"))
   {
-    ROS_DEBUG("*** LABELED MARKERS ***");
+    RCLCPP_DEBUG(logger, "*** LABELED MARKERS ***");
     int numLabeledMarkers = 0;
     utilities::read_and_seek(msgBufferIter, numLabeledMarkers);
     dataFrame->labeledMarkers.resize(numLabeledMarkers);
-    ROS_DEBUG("Labeled marker count: %d", numLabeledMarkers);
+    RCLCPP_DEBUG(logger, "Labeled marker count: %d", numLabeledMarkers);
 
     // Loop through labeled markers
     for (auto& labeledMarker : dataFrame->labeledMarkers)
     {
       DataFrameMessage::LabeledMarkerMessagePart labeledMarkerMessagePart;
-      labeledMarkerMessagePart.deserialize(msgBufferIter, labeledMarker, dataModel->getNatNetVersion());
+      labeledMarkerMessagePart.deserialize(logger, msgBufferIter, labeledMarker, dataModel->getNatNetVersion());
     }
   }
 
@@ -361,33 +365,33 @@ void DataFrameMessage::deserialize(
   // TODO: This is definitely not in the data model..
   if (NatNetVersion >= mocap_optitrack::Version("2.9"))
   {
-    ROS_DEBUG("*** FORCE PLATES ***");
+    RCLCPP_DEBUG(logger, "*** FORCE PLATES ***");
     int numForcePlates;
     utilities::read_and_seek(msgBufferIter, numForcePlates);
-    ROS_DEBUG("Force plate count: %d", numForcePlates);
+    RCLCPP_DEBUG(logger, "Force plate count: %d", numForcePlates);
     for (int iForcePlate = 0; iForcePlate < numForcePlates; iForcePlate++)
     {
         // ID
         int forcePlateId = 0;
         utilities::read_and_seek(msgBufferIter, forcePlateId);
-        ROS_DEBUG("Force plate ID: %d", forcePlateId);
+        RCLCPP_DEBUG(logger, "Force plate ID: %d", forcePlateId);
 
         // Channel Count
         int numChannels = 0; 
         utilities::read_and_seek(msgBufferIter, numChannels);
-        ROS_DEBUG("  Number of channels: %d", numChannels);
+        RCLCPP_DEBUG(logger, "  Number of channels: %d", numChannels);
 
         // Channel Data
         for (int i = 0; i < numChannels; i++)
         {
-            ROS_DEBUG("    Channel %d: ", i);
+            RCLCPP_DEBUG(logger, "    Channel %d: ", i);
             int numFrames = 0;
             utilities::read_and_seek(msgBufferIter, numFrames);
             for (int j = 0; j < numFrames; j++)
             {
                 float val = 0.0f;  
                 utilities::read_and_seek(msgBufferIter, val);
-                ROS_DEBUG("      Frame %d: %3.2f", j, val);
+                RCLCPP_DEBUG(logger, "      Frame %d: %3.2f", j, val);
             }
         }
     }
@@ -397,17 +401,17 @@ void DataFrameMessage::deserialize(
   // TODO: Also not in the data model..
   if (NatNetVersion >= mocap_optitrack::Version("3.0"))
   {
-    ROS_DEBUG("*** DEVICE DATA ***");
+    RCLCPP_DEBUG(logger, "*** DEVICE DATA ***");
     int numDevices;
     utilities::read_and_seek(msgBufferIter, numDevices);
-    ROS_DEBUG("Device count: %d", numDevices);
+    RCLCPP_DEBUG(logger, "Device count: %d", numDevices);
 
     for (int iDevice = 0; iDevice < numDevices; iDevice++)
     {
       // ID
       int deviceId = 0;
       utilities::read_and_seek(msgBufferIter, deviceId);
-      ROS_DEBUG("  Device ID: %d", deviceId);
+      RCLCPP_DEBUG(logger, "  Device ID: %d", deviceId);
 
       // Channel Count
       int numChannels = 0;
@@ -416,25 +420,25 @@ void DataFrameMessage::deserialize(
       // Channel Data
       for (int i = 0; i < numChannels; i++)
       {
-        ROS_DEBUG("    Channel %d: ", i);
+        RCLCPP_DEBUG(logger, "    Channel %d: ", i);
         int nFrames = 0; 
         utilities::read_and_seek(msgBufferIter, nFrames);
         for (int j = 0; j < nFrames; j++)
         {
             float val = 0.0f;
             utilities::read_and_seek(msgBufferIter, val);
-            ROS_DEBUG("      Frame %d: %3.2f", j, val);
+            RCLCPP_DEBUG(logger, "      Frame %d: %3.2f", j, val);
         }
       }
     }
   }
 
   // software latency (removed in version 3.0)
-  ROS_DEBUG("*** DIAGNOSTICS ***");
+  RCLCPP_DEBUG(logger, "*** DIAGNOSTICS ***");
   if (NatNetVersion < mocap_optitrack::Version("3.0"))
   {
     utilities::read_and_seek(msgBufferIter, dataFrame->latency);
-    ROS_DEBUG("Software latency : %3.3f", dataFrame->latency);
+    RCLCPP_DEBUG(logger, "Software latency : %3.3f", dataFrame->latency);
   }
 
   // timecode
@@ -459,22 +463,22 @@ void DataFrameMessage::deserialize(
     utilities::read_and_seek(msgBufferIter, fTimestamp);
     timestamp = (double)fTimestamp;
   }
-  ROS_DEBUG("Timestamp: %3.3f", timestamp);
+  RCLCPP_DEBUG(logger, "Timestamp: %3.3f", timestamp);
 
   // high res timestamps (version 3.0 and later)
   if (NatNetVersion >= mocap_optitrack::Version("3.0"))
   {
     uint64_t cameraMidExposureTimestamp = 0;
     utilities::read_and_seek(msgBufferIter, cameraMidExposureTimestamp);
-    ROS_DEBUG("Mid-exposure timestamp: %" PRIu64 "", cameraMidExposureTimestamp);
+    RCLCPP_DEBUG(logger, "Mid-exposure timestamp: %" PRIu64 "", cameraMidExposureTimestamp);
 
     uint64_t cameraDataReceivedTimestamp = 0;
     utilities::read_and_seek(msgBufferIter, cameraDataReceivedTimestamp);
-    ROS_DEBUG("Camera data received timestamp: %" PRIu64 "", cameraDataReceivedTimestamp);
+    RCLCPP_DEBUG(logger, "Camera data received timestamp: %" PRIu64 "", cameraDataReceivedTimestamp);
 
     uint64_t transmitTimestamp = 0;
     utilities::read_and_seek(msgBufferIter, transmitTimestamp);
-    ROS_DEBUG("Transmit timestamp: %" PRIu64 "", transmitTimestamp);
+    RCLCPP_DEBUG(logger, "Transmit timestamp: %" PRIu64 "", transmitTimestamp);
   }
 
   // frame params
@@ -488,12 +492,13 @@ void DataFrameMessage::deserialize(
   // end of data tag
   int eod = 0; 
   utilities::read_and_seek(msgBufferIter, eod);
-  ROS_DEBUG("=== END DATA FRAME ===");
+  RCLCPP_DEBUG(logger, "=== END DATA FRAME ===");
 }
 
 
 void MessageDispatcher::dispatch(
-  MessageBuffer const& msgBuffer, 
+  rclcpp::Logger logger,
+  MessageBuffer const& msgBuffer,
   mocap_optitrack::DataModel* dataModel)
 {
   // Grab message ID by casting to a natnet packet type
@@ -508,12 +513,12 @@ void MessageDispatcher::dispatch(
     if (dataModel->hasServerInfo())
     {
       DataFrameMessage msg;
-      msg.deserialize(msgBuffer, dataModel);
+      msg.deserialize(logger, msgBuffer, dataModel);
     }
-    // else
-    // {
-    //   ROS_WARN("Client has not received server info request. Parsing data message aborted.");
-    // }
+//    else
+//    {
+//      RCLCPP_WARN(logger, "Client has not received server info request. Parsing data message aborted.");
+//    }
     return;
   }
 
@@ -521,16 +526,16 @@ void MessageDispatcher::dispatch(
   {
     natnet::ServerInfoMessage msg;
     msg.deserialize(msgBuffer, dataModel);
-    ROS_INFO_ONCE("NATNet Version : %s", 
+    RCLCPP_INFO_ONCE(logger, "NATNet Version : %s",
       dataModel->getNatNetVersion().getVersionString().c_str());
-    ROS_INFO_ONCE("Server Version : %s", 
+    RCLCPP_INFO_ONCE(logger, "Server Version : %s",
       dataModel->getServerVersion().getVersionString().c_str());
     return;
   }
 
   if (packet->messageId == natnet::MessageType::UnrecognizedRequest)
   {
-    ROS_WARN("Received unrecognized request");
+    RCLCPP_WARN(logger, "Received unrecognized request");
   }
 }
 

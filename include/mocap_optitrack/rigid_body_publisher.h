@@ -33,8 +33,13 @@
 #include <map>
 #include <memory>
 
-#include <ros/ros.h>
-#include <tf/transform_broadcaster.h>
+#include <rclcpp/rclcpp.hpp>
+#include <rclcpp/publisher.hpp>
+#include <rclcpp/time.hpp>
+#include <tf2_ros/transform_broadcaster.h>
+
+#include <geometry_msgs/msg/pose_stamped.hpp>
+#include <geometry_msgs/msg/pose2_d.hpp>
 
 #include <mocap_optitrack/version.h>
 #include <mocap_optitrack/data_model.h>
@@ -47,21 +52,21 @@ namespace mocap_optitrack
 class RigidBodyPublisher
 {
 public:
-  RigidBodyPublisher(ros::NodeHandle &nh,
-                     Version const& natNetVersion,
-                     PublisherConfiguration const& config);
+  RigidBodyPublisher(rclcpp::Node::SharedPtr &node,
+    Version const& natNetVersion, 
+    PublisherConfiguration const& config);
   ~RigidBodyPublisher();
-  void publish(ros::Time const& time, RigidBody const&);
+  void publish(rclcpp::Time const& time, RigidBody const&);
 
 private:
   PublisherConfiguration config;
 
   Version coordinatesVersion;
 
-  tf::TransformBroadcaster tfPublisher;
-  ros::Publisher posePublisher;
-  ros::Publisher pose2dPublisher;
-  ros::Publisher odomPublisher;
+  tf2_ros::TransformBroadcaster tfPublisher;
+  rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr posePublisher;
+  rclcpp::Publisher<geometry_msgs::msg::Pose2D>::SharedPtr pose2dPublisher;
+  rclcpp::Publisher<nav_msgs::msg::Odom>::SharedPtr odomPublisher;
 };
 
 /// \brief Dispatches RigidBody data to the correct publisher.
@@ -72,7 +77,7 @@ class RigidBodyPublishDispatcher
   RigidBodyPublisherMap rigidBodyPublisherMap;
 
 public:
-  RigidBodyPublishDispatcher(ros::NodeHandle &nh,
+  RigidBodyPublishDispatcher(rclcpp::Node::SharedPtr &node,
                              Version const& natNetVersion,
                              PublisherConfigurations const& configs);
   void publish(ros::Time const& time, std::vector<RigidBody> const&);

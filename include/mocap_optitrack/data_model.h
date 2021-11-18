@@ -47,16 +47,14 @@ struct Marker
   float z;
 };
 
-struct __attribute__((__packed__)) Pose
+struct __attribute__ ((__packed__)) Pose
 {
-  struct __attribute__((__packed__))
-  {
+  struct __attribute__ ((__packed__)) {
     float x;
     float y;
     float z;
   } position;
-  struct __attribute__((__packed__))
-  {
+  struct __attribute__ ((__packed__)) {
     float x;
     float y;
     float z;
@@ -144,6 +142,7 @@ public:
   void clear();
 
   void setVersions(int* nver, int* sver);
+  void setVersions(int64_t* nver, int64_t* sver);
   Version const& getNatNetVersion() const;
   Version const& getServerVersion() const;
   bool hasServerInfo() const
