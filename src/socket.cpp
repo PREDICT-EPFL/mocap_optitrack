@@ -41,10 +41,6 @@ UdpMulticastSocket::UdpMulticastSocket(
   rclcpp::Node::SharedPtr &node,
   const int local_port,
   const std::string multicast_ip ) : node(node)
-#include <string>
-#include <ros/ros.h>
-
-UdpMulticastSocket::UdpMulticastSocket(const int local_port, const std::string multicast_ip)
 {
   remote_ip_exist = false;
 

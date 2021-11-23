@@ -40,6 +40,7 @@
 
 #include <geometry_msgs/msg/pose_stamped.hpp>
 #include <geometry_msgs/msg/pose2_d.hpp>
+#include <nav_msgs/msg/odometry.hpp>
 
 #include <mocap_optitrack/version.h>
 #include <mocap_optitrack/data_model.h>
@@ -66,7 +67,7 @@ private:
   tf2_ros::TransformBroadcaster tfPublisher;
   rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr posePublisher;
   rclcpp::Publisher<geometry_msgs::msg::Pose2D>::SharedPtr pose2dPublisher;
-  rclcpp::Publisher<nav_msgs::msg::Odom>::SharedPtr odomPublisher;
+  rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr odomPublisher;
 };
 
 /// \brief Dispatches RigidBody data to the correct publisher.
@@ -80,7 +81,7 @@ public:
   RigidBodyPublishDispatcher(rclcpp::Node::SharedPtr &node,
                              Version const& natNetVersion,
                              PublisherConfigurations const& configs);
-  void publish(ros::Time const& time, std::vector<RigidBody> const&);
+  void publish(rclcpp::Time const& time, std::vector<RigidBody> const&);
 };
 
 } // namespace

@@ -30,8 +30,11 @@
  */
 #include <mocap_optitrack/free_marker_publisher.h>
 
-#include "mocap_optitrack/PointArrayStamped.h"
-#include <geometry_msgs/Point.h>
+//#include "mocap_optitrack/msg/point_array_stamped.hpp"
+#include "rclcpp/rclcpp.hpp"
+#include "mocap_optitrack/msg/point_array_stamped.hpp"
+
+#include <geometry_msgs/msg/point.h>
 #include <vector>
 
 namespace mocap_optitrack
@@ -39,17 +42,17 @@ namespace mocap_optitrack
 
 namespace utilities
 {
-mocap_optitrack::PointArrayStamped getRosFreeMarkers(
+mocap_optitrack::msg::PointArrayStamped getRosFreeMarkers(
   std::vector<LabeledMarker> const& markers, const Version& coordinatesVersion)
 {
-  mocap_optitrack::PointArrayStamped msg;
+  mocap_optitrack::msg::PointArrayStamped msg;
   for (auto& labeledMarker : markers)
   {
     // Only add unlabeled "free" markers
     if (labeledMarker.bUnlabeled)
     {
       // Create a standard point
-      geometry_msgs::Point point;
+      geometry_msgs::msg::Point point;
 
       // TODO: add point.header info?
       if (coordinatesVersion < Version("2.0") && coordinatesVersion >= Version("1.7"))
@@ -78,10 +81,10 @@ mocap_optitrack::PointArrayStamped getRosFreeMarkers(
 
 }  // namespace utilities
 
-FreeMarkerPublisher::FreeMarkerPublisher(ros::NodeHandle &nh,
+FreeMarkerPublisher::FreeMarkerPublisher(const rclcpp::Node::SharedPtr& nh,
                                        Version const& natNetVersion)
 {
-  publisher = nh.advertise<mocap_optitrack::PointArrayStamped>("free_markers", 1000);
+  publisher = nh->create_publisher<mocap_optitrack::msg::PointArrayStamped>("free_markers", 1000);
 
   // Motive 1.7+ uses a new coordinate system
   // natNetVersion = (natNetVersion >= Version("1.7"));
@@ -93,14 +96,14 @@ FreeMarkerPublisher::~FreeMarkerPublisher()
 }
 
 void FreeMarkerPublisher::publish(
-  ros::Time const& time, std::vector<LabeledMarker> const& markers)
+  rclcpp::Time const& time, std::vector<LabeledMarker> const& markers)
 {
   // Create message
-  mocap_optitrack::PointArrayStamped points = utilities::getRosFreeMarkers(
-                                                markers, coordinatesVersion);
+  mocap_optitrack::msg::PointArrayStamped points = utilities::getRosFreeMarkers(
+    markers, coordinatesVersion);
 
   points.header.stamp = time;
-  publisher.publish(points);
+  publisher->publish(points);
 }
 
 }  // namespace mocap_optitrack

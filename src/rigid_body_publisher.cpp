@@ -34,9 +34,9 @@
 #include <tf2/utils.h>
 
 #include <geometry_msgs/msg/transform_stamped.hpp>
-#include <geometry_msgs/PoseStamped.h>
-#include <geometry_msgs/Pose2D.h>
-#include <nav_msgs/Odometry.h>
+#include <geometry_msgs/msg/pose_stamped.hpp>
+#include <geometry_msgs/msg/pose2_d.hpp>
+#include <nav_msgs/msg/odometry.h>
 #include <vector>
 
 namespace mocap_optitrack
@@ -44,9 +44,9 @@ namespace mocap_optitrack
 
 namespace utilities
 {
-geometry_msgs::PoseStamped getRosPose(RigidBody const& body, const Version& coordinatesVersion)
+geometry_msgs::msg::PoseStamped getRosPose(RigidBody const& body, const Version& coordinatesVersion)
 {
-  geometry_msgs::PoseStamped poseStampedMsg;
+  geometry_msgs::msg::PoseStamped poseStampedMsg;
   if (coordinatesVersion < Version("2.0") && coordinatesVersion >= Version("1.7"))
   {
     // Motive 1.7+ and < Motive 2.0 coordinate system
@@ -74,9 +74,11 @@ geometry_msgs::PoseStamped getRosPose(RigidBody const& body, const Version& coor
   }
   return poseStampedMsg;
 }
-nav_msgs::Odometry getRosOdom(RigidBody const& body, const Version& coordinatesVersion)
+
+
+nav_msgs::msg::Odometry getRosOdom(RigidBody const& body, const Version& coordinatesVersion)
 {
-  nav_msgs::Odometry OdometryMsg;
+  nav_msgs::msg::Odometry OdometryMsg;
   if (coordinatesVersion < Version("2.0") && coordinatesVersion >= Version("1.7"))
   {
     // Motive 1.7+ and < Motive 2.0 coordinate system
@@ -118,7 +120,7 @@ RigidBodyPublisher::RigidBodyPublisher(rclcpp::Node::SharedPtr &node,
     pose2dPublisher = node->create_publisher<geometry_msgs::msg::Pose2D>(config.pose2dTopicName, 1000);
 
   if (config.publishOdom)
-    odomPublisher = node->create_publisher<nav_msgs::Odometry>(config.odomTopicName, 1000);
+    odomPublisher = node->create_publisher<nav_msgs::msg::Odometry>(config.odomTopicName, 1000);
 
   // Motive 1.7+ uses a new coordinate system
   // natNetVersion = (natNetVersion >= Version("1.7"));
@@ -182,7 +184,10 @@ void RigidBodyPublisher::publish(rclcpp::Time const& time, RigidBody const& body
     transformStamped.header.frame_id = config.parentFrameId;
     transformStamped.header.stamp = time;
     transformStamped.child_frame_id = config.childFrameId;
-    transformStamped.transform.rotation = q;
+    transformStamped.transform.rotation.x = q.x();
+    transformStamped.transform.rotation.y = q.y();
+    transformStamped.transform.rotation.z = q.z();
+    transformStamped.transform.rotation.w = q.w();
     transformStamped.transform.translation.x = pose.pose.position.x;
     transformStamped.transform.translation.y = pose.pose.position.y;
     transformStamped.transform.translation.z = pose.pose.position.z;

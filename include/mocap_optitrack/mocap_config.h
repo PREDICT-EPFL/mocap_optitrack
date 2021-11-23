@@ -53,8 +53,8 @@ struct ServerDescription
   int commandPort;
   int dataPort;
   std::string multicastIpAddress;
-  bool enableOptitrack;
   std::vector<int64_t> version;
+  bool enableOptitrack;
 };
 
 /// \brief ROS publisher configuration

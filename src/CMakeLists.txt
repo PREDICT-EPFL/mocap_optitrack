@@ -11,9 +11,13 @@ add_executable(${PROJECT_NAME}_mocap_node
   free_marker_publisher.cpp
 )
 
+rosidl_target_interfaces(${PROJECT_NAME}_mocap_node
+		${PROJECT_NAME} "rosidl_typesupport_cpp")
+
 target_link_libraries(${PROJECT_NAME}_mocap_node 
   ${rclcpp_LIBRARIES}
   ${geometry_msgs_LIBRARIES}
+  ${nav_msgs_LIBRARIES}
   ${tf2_ros_LIBRARIES})
 
 set_target_properties(${PROJECT_NAME}_mocap_node PROPERTIES

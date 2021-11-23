@@ -34,11 +34,12 @@
 #include <map>
 #include <memory>
 
-#include <ros/ros.h>
+#include <rclcpp/rclcpp.hpp>
 
 #include <mocap_optitrack/version.h>
 #include <mocap_optitrack/data_model.h>
 #include <mocap_optitrack/mocap_config.h>
+#include <mocap_optitrack/msg/point_array_stamped.hpp>
 
 namespace mocap_optitrack
 {
@@ -47,15 +48,15 @@ namespace mocap_optitrack
 class FreeMarkerPublisher
 {
 public:
-  FreeMarkerPublisher(ros::NodeHandle &nh,
+  FreeMarkerPublisher(const rclcpp::Node::SharedPtr& nh,
                      Version const& natNetVersion);
   ~FreeMarkerPublisher();
-  void publish(ros::Time const& time, std::vector<LabeledMarker> const&);
+  void publish(rclcpp::Time const& time, std::vector<LabeledMarker> const&);
 
 private:
   Version coordinatesVersion;
 
-  ros::Publisher publisher;
+  rclcpp::Publisher<mocap_optitrack::msg::PointArrayStamped>::SharedPtr publisher;
 };
 
 } // namespace

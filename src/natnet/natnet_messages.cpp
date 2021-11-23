@@ -189,7 +189,7 @@ void DataFrameMessage::LabeledMarkerMessagePart::deserialize(
   // Get marker size
   utilities::read_and_seek(msgBufferIter, labeledMarker.size);
 
-  if (NatNetVersion >= mocap_optitrack::Version("2.6"))
+  if (natNetVersion >= mocap_optitrack::Version("2.6"))
   {
     // marker params
     short params = 0;

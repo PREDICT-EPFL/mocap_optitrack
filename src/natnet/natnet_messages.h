@@ -66,7 +66,7 @@ namespace natnet
 
         struct LabeledMarkerMessagePart
         {
-            void deserialize(MessageBuffer::const_iterator&, 
+            void deserialize(rclcpp::Logger logger, MessageBuffer::const_iterator&,
                 mocap_optitrack::LabeledMarker&,
                 mocap_optitrack::Version const&);
         };

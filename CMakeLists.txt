@@ -15,26 +15,30 @@ find_package(rclcpp REQUIRED)
 find_package(tf2_ros REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(nav_msgs REQUIRED)
-find_package(dynamic_reconfigure REQUIRED)
-find_package(message_generation REQUIRED)
+find_package(rosidl_default_generators REQUIRED)
+
+set(msg_files
+	"msg/PointArrayStamped.msg"
+)
+
+rosidl_generate_interfaces(${PROJECT_NAME}
+	${msg_files}
+	DEPENDENCIES std_msgs geometry_msgs nav_msgs
+)
+#
+#rosidl_target_interfaces(publish_address_book
+#		${PROJECT_NAME} "rosidl_typesupport_cpp")
 
 include_directories(include
 	${rclcpp_INCLUDE_DIRS}
 	${tf2_ros_INCLUDE_DIRS}
 	${geometry_msgs_INCLUDE_DIRS}
 	${nav_msgs_INCLUDE_DIRS}
-	${dynamic_reconfigure_INCLUDE_DIRS}
-	${message_generation_INCLUDE_DIRS}
 )
 
 add_subdirectory(src)
 
-rosidl_generate_interfaces(${PROJECT_NAME}
-	PointArrayStamped.msg
-	DEPENDENCIES std_msgs geometry_msgs
-)
-
-ament_export_dependencies(message_runtime dynamic_reconfigure)
+ament_export_dependencies(rosidl_default_runtime)
 ament_export_include_directories(include)
 
 install(DIRECTORY

@@ -30,37 +30,37 @@
 #include "mocap_optitrack/mocap_config.h"
 
 #include <string>
-#include <XmlRpcValue.h>
+//#include <XmlRpcValue.h>
 
 namespace mocap_optitrack
 {
 
-namespace impl
-{
-template<typename T>
-bool check_and_get_param(
-  XmlRpc::XmlRpcValue& config_node,
-  std::string const& key,
-  T& value)
-{
-  return false;
-}
-
-template<>
-bool check_and_get_param<std::string>(
-  XmlRpc::XmlRpcValue& config_node,
-  std::string const& key,
-  std::string& value)
-{
-  if (config_node[key].getType() == XmlRpc::XmlRpcValue::TypeString)
-  {
-    value = (std::string&)config_node[key];
-    return true;
-  }
-
-  return false;
-}
-}  // namespace impl
+//namespace impl
+//{
+//template<typename T>
+//bool check_and_get_param(
+//  XmlRpc::XmlRpcValue& config_node,
+//  std::string const& key,
+//  T& value)
+//{
+//  return false;
+//}
+//
+//template<>
+//bool check_and_get_param<std::string>(
+//  XmlRpc::XmlRpcValue& config_node,
+//  std::string const& key,
+//  std::string& value)
+//{
+//  if (config_node[key].getType() == XmlRpc::XmlRpcValue::TypeString)
+//  {
+//    value = (std::string&)config_node[key];
+//    return true;
+//  }
+//
+//  return false;
+//}
+//}  // namespace impl
 
 // Server description defaults
 const int ServerDescription::Default::CommandPort = 1510;
@@ -82,6 +82,7 @@ namespace rosparam
     const std::string PoseTopicName = "pose";
     const std::string Pose2dTopicName = "pose2d";
     const std::string OdomTopicName = "odom";
+    const std::string EnableTfPublisher = "tf";
     const std::string ChildFrameId = "child_frame_id";
     const std::string ParentFrameId = "parent_frame_id";
   }

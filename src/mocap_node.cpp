@@ -34,10 +34,8 @@
 #include <mocap_optitrack/mocap_config.h>
 #include <mocap_optitrack/rigid_body_publisher.h>
 #include <mocap_optitrack/free_marker_publisher.h>
-#include <mocap_optitrack/MocapOptitrackConfig.h>
 #include "natnet/natnet_messages.h"
 
-#include <dynamic_reconfigure/server.h>
 #include <memory>
 
 // ROS2 includes
@@ -59,19 +57,7 @@ namespace mocap_optitrack
         serverDescription(serverDescr),
         publisherConfigurations(pubConfigs)
     {
-      server.setCallback(boost::bind(&OptiTrackRosBridge::reconfigureCallback, this, _1, _2));
-      serverDescription = serverDescr;
-      publisherConfigurations = pubConfigs;
-    }
 
-    void reconfigureCallback(MocapOptitrackConfig& config, uint32_t)
-    {
-      serverDescription.enableOptitrack = config.enable_optitrack;
-      serverDescription.commandPort = config.command_port;
-      serverDescription.dataPort = config.data_port;
-      serverDescription.multicastIpAddress = config.multicast_address;
-
-      initialize();
     }
 
     void initialize() {
@@ -108,22 +94,18 @@ namespace mocap_optitrack
                                          dataModel.getNatNetVersion(),
                                          publisherConfigurations));
 
-
-        /** TODO LEFTOVER FROM MERGE, translate this has_param() to ROS 2 **/
-
-        /*
         // Create a separate publisher for free markers
-        if (nh.hasParam("free_markers"))
+        if (node->has_parameter("free_markers"))
         {
           bool publishFreeMarkers;
-          nh.getParam("free_markers", publishFreeMarkers);
+          node->get_parameter("free_markers", publishFreeMarkers);
           if (publishFreeMarkers)
           {
-            ROS_INFO("Publishing free markers");
-            freeMarkerPublisherPtr.reset(
-              new FreeMarkerPublisher(nh, dataModel.getNatNetVersion()));
+            RCLCPP_INFO(node->get_logger(), "Publishing free markers");
+            freeMarkerPublisherPtr = std::make_unique<FreeMarkerPublisher>(
+              node, dataModel.getNatNetVersion());
           }
-        }*/
+        }
 
         RCLCPP_INFO(node->get_logger(), "Initialization complete");
         initialized = true;
@@ -158,14 +140,11 @@ namespace mocap_optitrack
             // If we processed some data, take a short break
             usleep(10);
           }
+        } else {
+          rclcpp::Rate(1.).sleep();
         }
-        /** TODO LEFTOVER FROM MERGE, translate this has_param() to ROS 2 **/
-        /*
-        else {
-          ros::Duration(1.).sleep();
-        }
-        ros::spinOnce();
-        */
+        rclcpp::spin_some(node);
+
       }
     }
 
@@ -197,7 +176,7 @@ namespace mocap_optitrack
     std::unique_ptr<UdpMulticastSocket> multicastClientSocketPtr;
     std::unique_ptr<RigidBodyPublishDispatcher> publishDispatcherPtr;
     std::unique_ptr<FreeMarkerPublisher> freeMarkerPublisherPtr;
-    dynamic_reconfigure::Server<MocapOptitrackConfig> server;
+//    dynamic_reconfigure::Server<MocapOptitrackConfig> server;
     bool initialized;
   };
 
