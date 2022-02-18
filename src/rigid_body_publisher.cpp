@@ -1,30 +1,30 @@
-/*
+/* 
  * Copyright (c) 2018, Houston Mechatronics Inc., JD Yamokoski
  * Copyright (c) 2012, Clearpath Robotics, Inc., Alex Bencz
  * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
+ * Redistribution and use in source and binary forms, with or without 
  * modification, are permitted provided that the following conditions are met:
  *
- * 1. Redistributions of source code must retain the above copyright notice,
+ * 1. Redistributions of source code must retain the above copyright notice, 
  *    this list of conditions and the following disclaimer.
- * 2. Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
+ * 2. Redistributions in binary form must reproduce the above copyright 
+ *    notice, this list of conditions and the following disclaimer in the 
  *    documentation and/or other materials provided with the distribution.
- * 3. Neither the name of the copyright holder nor the names of its
- *    contributors may be used to endorse or promote products derived from
- *    this software without specific prior written permission.
+ * 3. Neither the name of the copyright holder nor the names of its 
+ *    contributors may be used to endorse or promote products derived from 
+ *    this software without specific prior written permission. 
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
- * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
- * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
- * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
- * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
- * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE 
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE 
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE 
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR 
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF 
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS 
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
  * POSSIBILITY OF SUCH DAMAGE.
  */
 #include <mocap_optitrack/rigid_body_publisher.h>
@@ -131,7 +131,7 @@ RigidBodyPublisher::~RigidBodyPublisher()
 {
 }
 
-void RigidBodyPublisher::publish(rclcpp::Time const& time, RigidBody const& body)
+void RigidBodyPublisher::publish(rclcpp::Time const& time, RigidBody const& body, rclcpp::Logger logger)
 {
   // don't do anything if no new data was provided
   if (!body.hasValidData())
@@ -148,8 +148,26 @@ void RigidBodyPublisher::publish(rclcpp::Time const& time, RigidBody const& body
   geometry_msgs::msg::PoseStamped pose = utilities::getRosPose(body, coordinatesVersion);
   nav_msgs::msg::Odometry odom =  utilities::getRosOdom(body, coordinatesVersion);
 
-  pose.header.stamp = time;
-  odom.header.stamp = time;
+  double curTimeDifference = time.seconds() - body.trackTimestamp;
+
+  // If timeDifference is 0 it has not yet been set
+  if (timeDifference == 0){
+    RCLCPP_INFO(logger, "Initial clock sync: %.0f seconds", curTimeDifference);
+    timeDifference = curTimeDifference;
+  }
+
+  // Clock sync can be improved if the current timeDifference is the lowest seen
+  if (curTimeDifference < timeDifference){
+    RCLCPP_INFO(logger, "Improving clock sync by %.5f seconds", timeDifference - curTimeDifference);
+    timeDifference = curTimeDifference;
+  }
+
+  // Calculate correct timestamp using time difference
+  double corStamp = body.trackTimestamp + timeDifference;
+
+  auto corrected_time = rclcpp::Time((int)corStamp, (corStamp-floor(corStamp)) * 1000000000 );
+  pose.header.stamp = corrected_time;
+  odom.header.stamp = corrected_time;
 
   if (config.publishPose)
   {
@@ -198,7 +216,7 @@ void RigidBodyPublisher::publish(rclcpp::Time const& time, RigidBody const& body
 
 
 RigidBodyPublishDispatcher::RigidBodyPublishDispatcher(
-  rclcpp::Node::SharedPtr &node,
+  rclcpp::Node::SharedPtr &node, 
   Version const& natNetVersion,
   PublisherConfigurations const& configs)
 {
@@ -211,7 +229,8 @@ RigidBodyPublishDispatcher::RigidBodyPublishDispatcher(
 
 void RigidBodyPublishDispatcher::publish(
   rclcpp::Time const& time,
-  std::vector<RigidBody> const& rigidBodies)
+  std::vector<RigidBody> const& rigidBodies,
+  rclcpp::Logger logger)
 {
   for (auto const& rigidBody : rigidBodies)
   {
@@ -219,9 +238,10 @@ void RigidBodyPublishDispatcher::publish(
 
     if (iter != rigidBodyPublisherMap.end())
     {
-      (*iter->second).publish(time, rigidBody);
+      (*iter->second).publish(time, rigidBody, logger);
     }
   }
 }
 
 }  // namespace mocap_optitrack
+

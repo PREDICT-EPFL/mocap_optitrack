@@ -65,13 +65,14 @@ struct __attribute__ ((__packed__)) Pose
 /// \brief Data object holding information about a single rigid body within a mocap skeleton
 struct RigidBody
 {
-  RigidBody();
-  int bodyId;
-  Pose pose;
-  float meanMarkerError;
-  bool isTrackingValid;
+    RigidBody();
+    int bodyId;
+    Pose pose;
+    float meanMarkerError;
+    bool isTrackingValid;
+    double trackTimestamp;
 
-  bool hasValidData() const;
+    bool hasValidData() const;
 };
 
 /// \brief Data object for storing labeled marker information
@@ -93,66 +94,63 @@ struct LabeledMarker
 /// \brief Data object describing a single tracked model
 struct ModelDescription
 {
-  ModelDescription();
-  void clear();
+    ModelDescription();
+    void clear();
 
-  std::string name;
-  std::vector<std::string> markerNames;
+    std::string name;
+    std::vector<std::string> markerNames;
 };
 
 struct MarkerSet
 {
-  void clear();
+    void clear();
 
-  char name[256];
-  std::vector<Marker> markers;
+    char name[256];
+    std::vector<Marker> markers;
 };
 
 /// \brief Data object holding poses of a tracked model's components
 struct ModelFrame
 {
-  ModelFrame();
-  void clear();
+    ModelFrame();
+    void clear();
 
-  std::vector<MarkerSet> markerSets;
-  std::vector<Marker> otherMarkers;
-  std::vector<RigidBody> rigidBodies;
-  std::vector<LabeledMarker> labeledMarkers;
+    std::vector<MarkerSet> markerSets;
+    std::vector<Marker> otherMarkers;
+    std::vector<RigidBody> rigidBodies;
+    std::vector<LabeledMarker> labeledMarkers;
 
-  float latency;
+    float latency;
 };
 
 /// \brief Data object holding server info
 struct ServerInfo
 {
-  ServerInfo();
-  Version natNetVersion;
-  Version serverVersion;
+    ServerInfo();
+    Version natNetVersion;
+    Version serverVersion;
 };
 
 /// \brief The data model for this node
 class DataModel
 {
 public:
-  DataModel();
+    DataModel();
 
-  int frameNumber;
-  ModelFrame dataFrame;
+    int frameNumber;
+    ModelFrame dataFrame;
 
-  void clear();
+    void clear();
 
-  void setVersions(int* nver, int* sver);
-  void setVersions(int64_t* nver, int64_t* sver);
-  Version const& getNatNetVersion() const;
-  Version const& getServerVersion() const;
-  bool hasServerInfo() const
-  {
-    return hasValidServerInfo;
-  };
+    void setVersions(int* nver, int* sver);
+    void setVersions(int64_t* nver, int64_t* sver);
+    Version const& getNatNetVersion() const;
+    Version const& getServerVersion() const;
+    bool hasServerInfo() const {return hasValidServerInfo;};
 
 private:
-  ServerInfo serverInfo;
-  bool hasValidServerInfo;
+    ServerInfo serverInfo;
+    bool hasValidServerInfo;
 };
 
 }
