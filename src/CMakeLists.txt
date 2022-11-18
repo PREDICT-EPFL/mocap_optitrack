@@ -11,8 +11,8 @@ add_executable(${PROJECT_NAME}_mocap_node
   free_marker_publisher.cpp
 )
 
-rosidl_target_interfaces(${PROJECT_NAME}_mocap_node
-		${PROJECT_NAME} "rosidl_typesupport_cpp")
+rosidl_get_typesupport_target(cpp_typesupport_target ${PROJECT_NAME} "rosidl_typesupport_cpp")
+target_link_libraries(${PROJECT_NAME}_mocap_node "${cpp_typesupport_target}")
 
 target_link_libraries(${PROJECT_NAME}_mocap_node 
   ${rclcpp_LIBRARIES}
