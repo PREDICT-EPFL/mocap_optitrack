@@ -2,7 +2,7 @@
 
 A ROS package for extracting streaming information from Optitrack system and publishing rigid-body and free marker information.
 
-This has been tested in the Stanford ASL setup with Motive:Tracker 2.2.0 and ROS Noetic.
+This has been tested in the EPFL Predict setup with Motive 3.0.1 and ROS2 Humble.
 
 
 ---
@@ -10,7 +10,7 @@ This has been tested in the Stanford ASL setup with Motive:Tracker 2.2.0 and ROS
 Clone this repository to your ROS `[ROS_WS]/src` folder and then run `catkin_make` to build the package.
 
 ### ROS Configuration
-Modify the `mocap_optitrack/config/mocap.yaml` configuration file. The `optitrack_config` parameters in this file are currently set for the Stanford ASL setup. Set `free_markers` to `true` if you want all unlabeled markers (not belonging to rigid bodies) to be published. Define a new rigid-body for each rigid-body that is being tracked by the Optitrack system that you want published. The number corresponds to the `Streaming ID` value set in the Motive:Tracker software for the particular asset. The remaining parameters for each rigid-body specify the ROS topic name information.
+Modify the `mocap_optitrack/config/mocap.yaml` configuration file. The `optitrack_config` parameters in this file are currently set for the EPFL Predict setup. Set `free_markers` to `true` if you want all unlabeled markers (not belonging to rigid bodies) to be published. Define a new rigid-body for each rigid-body that is being tracked by the Optitrack system that you want published. The number corresponds to the `Streaming ID` value set in the Motive software for the particular asset. The remaining parameters for each rigid-body specify the ROS topic name information.
 
 ### Motive:Tracker Configuration
 Create any assets in the scene that you want to stream information for.
