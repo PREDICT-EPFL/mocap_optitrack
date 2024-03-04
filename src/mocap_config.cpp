@@ -156,7 +156,7 @@ void NodeConfiguration::fromRosParam(
   {
     PublisherConfiguration publisherConfig;
 
-    publisherConfig.rigidBodyId = std::atoi(prefix.substr(rosparam::keys::RigidBodies.length() + 1, 1).c_str());
+    publisherConfig.rigidBodyId = std::atoi(prefix.substr(rosparam::keys::RigidBodies.length() + 1).c_str());
 
     const bool readPoseTopicName = node->get_parameter(
       prefix + "." + rosparam::keys::PoseTopicName, publisherConfig.poseTopicName);
